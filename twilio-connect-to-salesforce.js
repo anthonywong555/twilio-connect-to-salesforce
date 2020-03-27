@@ -1,14 +1,48 @@
-//================================================================================
-// Modules
-//================================================================================
 const axios = require('axios').default;
 const querystring = require('querystring');
 
 exports.handler = async function(context, event, callback) {
-  //================================================================================
-  // Context Variables
-  //================================================================================
+  try {
+    const twilioClient = context.getTwilioClient();
+    const sfAuthResponse = await getSalesforceAuth(twilioClient, context);
+    const result = await insertPlatformEvent(context, event, sfAuthResponse);
+    callback(null, result);
+  } catch (e) {
+    callback(e);
+  }
+}
 
+async function getSalesforceAuth(twilioClient, context) {
+  try {
+    // Check Against Sync Map
+    const sfAuthResponse = await 
+        twilioClient.sync.
+        services(context.TWILIO_SYNC_DEFAULT_SERVICE_SID).
+        documents(context.SF_SYNC_KEY).fetch();
+        
+    return sfAuthResponse.data;
+  } catch (e) {
+    if(e.message === `The requested resource /Services/${context.TWILIO_SYNC_DEFAULT_SERVICE_SID}/Documents/${context.SF_SYNC_KEY} was not found`) {
+      // If not there then auth to Salesforce
+      const sfAuthResponse = await authToSalesforce(context);
+      
+      // Save it into Sync
+      await twilioClient.sync.
+      services(context.TWILIO_SYNC_DEFAULT_SERVICE_SID).
+      documents.create({
+        uniqueName: context.SF_SYNC_KEY,
+        data: sfAuthResponse,
+        ttl: context.SF_TTL
+      });
+      
+      return sfAuthResponse;
+    } else {
+      throw formatErrorMsg(context, 'getSalesforceAuth', e);
+    }
+  }
+}
+
+async function authToSalesforce(context) {
   // Are we using a sandbox or not
   const isSandbox = (context.SF_IS_SANDBOX == 'true');
 
@@ -29,13 +63,6 @@ exports.handler = async function(context, event, callback) {
 
   const sfTokenTTL = context.SF_TTL;
 
-  //================================================================================
-  // End Context Variables
-  //================================================================================
-
-  // Use namespace is to tell the code to apply the package namespace or not.
-  // The default should be true.  If you are getting the requested resource
-  // does not exist then try setting value to false.
   const useNameSpace = true;
 
   //The salesforce managed package namespace
@@ -48,38 +75,6 @@ exports.handler = async function(context, event, callback) {
       salesforceUrl = 'https://test.salesforce.com';
   }
 
-  const twilioClient = context.getTwilioClient();
-
-  try {
-    // get salesforce auth
-
-    // insert record
-
-  } catch (e) {
-
-  }
-}
-
-async function getSalesforceAuth(twilioClient, clientId, clientSecret, sfUserName, sfPassword, sfToken) {
-  // Check Against Sync Map
-
-  // 
-
-}
-
-async function checkAgainstSync(twilioClient) {
-
-}
-
-/**
- * Auth to Salesforce
- * @param {*} clientId 
- * @param {*} clientSecret 
- * @param {*} sfUserName 
- * @param {*} sfPassword 
- * @param {*} sfToken 
- */
-async function authToSalesforce(clientId, clientSecret, sfUserName, sfPassword, sfToken) {
   const form = {
     grant_type: 'password',
     client_id: clientId,
@@ -89,39 +84,52 @@ async function authToSalesforce(clientId, clientSecret, sfUserName, sfPassword, 
   };
 
   const formData = querystring.stringify(form);
+  const contentLength = formData.length;
 
-  axios.post('http://something.com/', querystring.stringify({ foo: 'bar' }));
+  try {
+    const sfAuthReponse = await axios({
+      method: 'POST',
+      headers: {
+        'Content-Length': contentLength,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      url: `${salesforceUrl}/services/oauth2/token`,
+      data: querystring.stringify(form)
+    });
+    
+    
+    return sfAuthReponse.data;
+  } catch (e) {
+    throw formatErrorMsg(context, 'authToSalesforce', e);
+  }
 }
 
-async function insertPlatformEvent(event, sfAuthResponse) {
-  const platformEvent = buildPlatformEvent(event);
-  const url = sfAuthReponse.instance_url + getPlatformEventUrl();
-  const options = {
-    headers: { 'Authorization': `Bearer ${sfAuthResponse.access_token}` },
-    data: platformEvent,
-    url,
-  };
-  await axios.post(options);
+async function insertPlatformEvent(context, event, sfAuthResponse) {
+    try {
+      const platformEvent = buildPlatformEvent(event);
+      const url = sfAuthReponse.instance_url + getPlatformEventUrl(context);
+      const result = await axios({
+        url,
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sfAuthResponse.access_token}` },
+        data: platformEvent,
+      });
+      
+      return result.data;
+    } catch(e) {
+        formatErrorMsg(context, insertPlatformEvent, e);
+    }
 }
 
-/**
- * Gets the Salesforce services url for the platform event
- * @returns {string}
- */
-function getPlatformEventUrl(useNameSpace, nameSpace){
-  if(useNameSpace){
-      return '/services/data/v43.0/sobjects/' + nameSpace + 'Twilio_Message_Status__e';
+function getPlatformEventUrl(context){
+  if(context.SF_USE_NAME_SPACE){
+      return '/services/data/v43.0/sobjects/' + context.SF_NAME_SPACE + 'Twilio_Message_Status__e';
   } else{
       return '/services/data/v43.0/sobjects/Twilio_Message_Status__e';
   }
 }
 
-/**
- * Builds the platform event request
- * @param event
- */
-function buildPlatformEvent(event){
-  //Object map that maps Twilio Field to Salesforce Field
+function buildPlatformEvent(context, event) {
   const eventToPEMap = {
     "Body":"Body__c",
     "To":"To__c",
@@ -132,20 +140,24 @@ function buildPlatformEvent(event){
     "SmsStatus":"SmsStatus__c",
     "ErrorCode":"ErrorCode__c"
   };
-
+  
   const platformEvent = {};
-
-  //Loop through event and build platform event
+  
   for (const property in event) {
-      if (eventToPEMap.hasOwnProperty(property)) {
-          const eventProp;
-          if(useNameSpace){
-              eventProp =  nameSpace + eventToPEMap[property];
-          } else{
-              eventProp = eventToPEMap[property];
-          }
-          platformEvent[eventProp] = event[property];
+    if (eventToPEMap.hasOwnProperty(property)) {
+      let eventProp;
+      if(context.SF_USE_NAME_SPACE){
+        eventProp =  context.SF_NAME_SPACE + eventToPEMap[property];
+      } else{
+        eventProp = eventToPEMap[property];
       }
+      platformEvent[eventProp] = event[property];
+    }
   }
+  
   return platformEvent;
+}
+
+function formatErrorMsg(context, functionName, errorMsg) {
+  return `Twilio Function Path: ${context.PATH} \n Function Name: ${functionName} \n Error Message: ${errorMsg}`
 }
