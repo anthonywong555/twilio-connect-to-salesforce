@@ -2,20 +2,18 @@ const axios = require('axios').default;
 const querystring = require('querystring');
 const moment = require('moment');
 
-/*
- * @return Salesforce Auth
- */
 exports.handler = async function(context, event, callback) {
   try {
     const twilioClient = context.getTwilioClient();
     const sfAuthResponse = await getSalesforceAuth(twilioClient, context);
-    callback(null, sfAuthResponse);
+    const result = await insertPlatformEvent(context, event, sfAuthResponse);
+    callback(null, result);
   } catch (e) {
     callback(e);
   }
 }
 
-async const getSalesforceAuth = (twilioClient, context) => {
+async function getSalesforceAuth(twilioClient, context) {
   const ERROR_FORCE_REFRESH = 'ERROR_FORCE_REFRESH';
   try {
     // Check Against Sync Map
@@ -77,8 +75,7 @@ async const getSalesforceAuth = (twilioClient, context) => {
   }
 }
 
-async const authToSalesforce = (context) => {
-  try {
+async function authToSalesforce(context) {
   // Are we using a sandbox or not
   const isSandbox = (context.SF_IS_SANDBOX == 'true');
 
@@ -110,26 +107,26 @@ async const authToSalesforce = (context) => {
   if (isSandbox === true) {
     salesforceUrl = 'https://test.salesforce.com';
   }
-  
-  const form = {
-    grant_type: 'password',
-    client_id: clientId,
-    client_secret: clientSecret,
-    username: sfUserName,
-    password: sfPassword + sfToken
-  };
+  try {
+    const form = {
+      grant_type: 'password',
+      client_id: clientId,
+      client_secret: clientSecret,
+      username: sfUserName,
+      password: sfPassword + sfToken
+    };
 
-  const formData = querystring.stringify(form);
-  const contentLength = formData.length;
-  const sfAuthReponse = await axios({
-    method: 'POST',
-    headers: {
-      'Content-Length': contentLength,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    url: `${salesforceUrl}/services/oauth2/token`,
-    data: querystring.stringify(form)
-  });
+    const formData = querystring.stringify(form);
+    const contentLength = formData.length;
+    const sfAuthReponse = await axios({
+      method: 'POST',
+      headers: {
+        'Content-Length': contentLength,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      url: `${salesforceUrl}/services/oauth2/token`,
+      data: querystring.stringify(form)
+    });
 
 
     return sfAuthReponse.data;
@@ -138,6 +135,63 @@ async const authToSalesforce = (context) => {
   }
 }
 
-const formatErrorMsg = (context, functionName, errorMsg) => {
+async function insertPlatformEvent(context, event, sfAuthResponse) {
+  try {
+    const platformEvent = buildPlatformEvent(context, event);
+    const url = sfAuthResponse.instance_url + getPlatformEventUrl(context);
+
+    const result = await axios({
+      url,
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sfAuthResponse.access_token}`
+      },
+      data: platformEvent,
+    });
+
+    return result.data;
+  } catch (e) {
+    throw formatErrorMsg(context, 'insertPlatformEvent', e);
+  }
+}
+
+function getPlatformEventUrl(context) {
+  if (context.SF_USE_NAME_SPACE) {
+    return `/services/data/v43.0/sobjects/${context.SF_NAME_SPACE}Twilio_Message_Status__e`;
+  } else {
+    return '/services/data/v43.0/sobjects/Twilio_Message_Status__e';
+  }
+}
+
+function buildPlatformEvent(context, event) {
+  const eventToPEMap = {
+    "Body": "Body__c",
+    "To": "To__c",
+    "From": "From__c",
+    "AccountSid": "AccountSid__c",
+    "SmsSid": "MessageSid__c",
+    "MessagingServiceSid": "MessagingServiceSid__c",
+    "SmsStatus": "SmsStatus__c",
+    "ErrorCode": "ErrorCode__c"
+  };
+
+  const platformEvent = {};
+
+  for (const property in event) {
+    if (eventToPEMap.hasOwnProperty(property)) {
+      let eventProp;
+      if (context.SF_USE_NAME_SPACE) {
+        eventProp = context.SF_NAME_SPACE + eventToPEMap[property];
+      } else {
+        eventProp = eventToPEMap[property];
+      }
+      platformEvent[eventProp] = event[property];
+    }
+  }
+
+  return platformEvent;
+}
+
+function formatErrorMsg(context, functionName, errorMsg) {
   return `Twilio Function Path: ${context.PATH} \n Function Name: ${functionName} \n Error Message: ${errorMsg}`
 }
