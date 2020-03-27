@@ -102,7 +102,7 @@ async function authToSalesforce(context) {
   const nameSpace = 'TwilioSF__';
 
   //The login url
-  const salesforceUrl = 'https://login.salesforce.com';
+  let salesforceUrl = 'https://login.salesforce.com';
 
   if (isSandbox === true) {
     salesforceUrl = 'https://test.salesforce.com';
