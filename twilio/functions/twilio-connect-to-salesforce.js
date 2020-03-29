@@ -96,10 +96,10 @@ async function authToSalesforce(context) {
 
   const sfTokenTTL = context.SF_TTL;
 
-  const useNameSpace = true;
+  const useNameSpace = context.SF_USE_NAME_SPACE;
 
   //The salesforce managed package namespace
-  const nameSpace = 'TwilioSF__';
+  const nameSpace = context.SF_NAME_SPACE;
 
   //The login url
   let salesforceUrl = 'https://login.salesforce.com';
