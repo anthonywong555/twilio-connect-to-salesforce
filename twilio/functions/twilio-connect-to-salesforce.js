@@ -77,7 +77,7 @@ async function getSalesforceAuth(twilioClient, context) {
 
 async function authToSalesforce(context) {
   // Are we using a sandbox or not
-  const isSandbox = (context.SF_IS_SANDBOX == 'true');
+  const isSandbox = (context.SF_IS_SANDBOX === 'true');
 
   //Consumer Key from Salesforce Connected app
   const clientId = context.SF_CONSUMER_KEY;
@@ -93,13 +93,6 @@ async function authToSalesforce(context) {
 
   //The salesforce user token
   const sfToken = context.SF_TOKEN;
-
-  const sfTokenTTL = context.SF_TTL;
-
-  const useNameSpace = context.SF_USE_NAME_SPACE;
-
-  //The salesforce managed package namespace
-  const nameSpace = context.SF_NAME_SPACE;
 
   //The login url
   let salesforceUrl = 'https://login.salesforce.com';
@@ -156,7 +149,7 @@ async function insertPlatformEvent(context, event, sfAuthResponse) {
 }
 
 function getPlatformEventUrl(context) {
-  if (context.SF_USE_NAME_SPACE) {
+  if (context.SF_USE_NAME_SPACE === 'true') {
     return `/services/data/v43.0/sobjects/${context.SF_NAME_SPACE}Twilio_Message_Status__e`;
   } else {
     return '/services/data/v43.0/sobjects/Twilio_Message_Status__e';
@@ -180,7 +173,7 @@ function buildPlatformEvent(context, event) {
   for (const property in event) {
     if (eventToPEMap.hasOwnProperty(property)) {
       let eventProp;
-      if (context.SF_USE_NAME_SPACE) {
+      if (context.SF_USE_NAME_SPACE === 'true') {
         eventProp = context.SF_NAME_SPACE + eventToPEMap[property];
       } else {
         eventProp = eventToPEMap[property];
@@ -193,5 +186,10 @@ function buildPlatformEvent(context, event) {
 }
 
 function formatErrorMsg(context, functionName, errorMsg) {
-  return `Twilio Function Path: ${context.PATH} \n Function Name: ${functionName} \n Error Message: ${errorMsg}`
+  const formatErrMsg = 
+    (errorMsg !== null && typeof errorMsg === 'object') ? 
+      JSON.stringify(errorMsg) : 
+      errorMsg;
+  
+  return `Twilio Function Path: ${context.PATH} \n Function Name: ${functionName} \n Error Message: ${formatErrMsg}`
 }
