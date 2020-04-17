@@ -23,7 +23,7 @@ const driver = async (context, twilioClient) => {
 const getSalesforceAuth = async (context, twilioClient) => {
   try {
     let sfAuthResponse;
-    
+
     if(globalSFAuthResponse) {
       sfAuthResponse = {...globalSFAuthResponse};
     } else {
@@ -51,7 +51,7 @@ const getSFAuthFromTwilioSync = async(context, twilioClient) => {
         // Insert SFDCAuth to Twilio Sync
         const sfAuthResponse = await authToSalesforce(context);
 
-        await twilioClient.sync.
+        const result = await twilioClient.sync.
           services(context.TWILIO_SYNC_DEFAULT_SERVICE_SID).
           documents.create({
             uniqueName: context.SF_SYNC_KEY,
@@ -59,7 +59,7 @@ const getSFAuthFromTwilioSync = async(context, twilioClient) => {
             ttl: context.SF_TTL
           });
         
-        return sfdcAuthResponse;
+        return result;
       } catch (e) {
         throw formatErrorMsg(context, 'getSFAuthFromTwilioSync.inner', e);
       }
