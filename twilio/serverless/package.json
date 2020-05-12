@@ -12,5 +12,10 @@
   },
   "engines": {
     "node": "10.17.0"
+  },
+  "dependencies": {
+    "jsforce": "^1.9.3",
+    "moment": "^2.25.3",
+    "twilio": "^3.42.2"
   }
 }
