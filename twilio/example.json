@@ -1,0 +1,3681 @@
+{
+  "description": "Scheduling Example",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        {
+          "event": "incomingMessage"
+        },
+        {
+          "next": "set_variables_1",
+          "event": "incomingCall"
+        },
+        {
+          "event": "incomingRequest"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -170,
+          "y": -970
+        }
+      }
+    },
+    {
+      "name": "CheckSchedule",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "setSchedule",
+          "event": "success"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -140,
+          "y": -310
+        },
+        "method": "GET",
+        "content_type": "application/x-www-form-urlencoded;charset=utf-8",
+        "parameters": [
+          {
+            "value": "{{flow.variables.country}}",
+            "key": "country"
+          },
+          {
+            "value": "{{flow.variables.timezone}}",
+            "key": "timezone"
+          }
+        ],
+        "url": "https://sunglow-lemming-5152.twil.io/CheckSchedule"
+      }
+    },
+    {
+      "name": "setOpsZone",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "CheckSchedule",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "index": "0",
+            "value": "US",
+            "key": "country"
+          },
+          {
+            "index": "1",
+            "value": "America/Halifax",
+            "key": "timezone"
+          }
+        ],
+        "offset": {
+          "x": -140,
+          "y": -540
+        }
+      }
+    },
+    {
+      "name": "setSchedule",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25001",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "index": "0",
+            "value": "{{widgets.CheckSchedule.parsed.isOpen}}",
+            "key": "isOpen"
+          },
+          {
+            "index": "1",
+            "value": "{{widgets.CheckSchedule.parsed.isHoliday}}",
+            "key": "isHoliday"
+          },
+          {
+            "index": "2",
+            "value": "{{widgets.CheckSchedule.parsed.isPartialDay}}",
+            "key": "isPartialDay"
+          },
+          {
+            "index": "3",
+            "value": "{{widgets.CheckSchedule.parsed.isRegularDay}}",
+            "key": "isRegularDay"
+          },
+          {
+            "index": "4",
+            "value": "{{widgets.CheckSchedule.parsed.description}}",
+            "key": "description"
+          }
+        ],
+        "offset": {
+          "x": -140,
+          "y": -80
+        }
+      }
+    },
+    {
+      "name": "set_variables_1",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "setOpsZone",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "BB",
+            "key": "ct1"
+          },
+          {
+            "index": "1",
+            "value": "CIBA",
+            "key": "ct2"
+          },
+          {
+            "value": "CIBC Alpha",
+            "key": "ClientName"
+          }
+        ],
+        "offset": {
+          "x": -140,
+          "y": -780
+        }
+      }
+    },
+    {
+      "name": "m25001",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25001",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25001-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -140,
+          "y": 180
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25001",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "set_variables_2",
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25001.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_set_variables_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25001.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25001.Digits}}",
+        "offset": {
+          "x": -140,
+          "y": 410
+        }
+      }
+    },
+    {
+      "name": "set_variables_2",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "English",
+            "key": "LangType"
+          },
+          {
+            "value": "E",
+            "key": "ct6"
+          }
+        ],
+        "offset": {
+          "x": -870,
+          "y": 640
+        }
+      }
+    },
+    {
+      "name": "m25017",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25017",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "next": "m25018",
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25017-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -870,
+          "y": 910
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25017",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "m25018",
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_4",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25017.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "isHoliday",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25017.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "next": "m25019",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "3",
+              "arguments": [
+                "{{widgets.m25017.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "next": "m25015",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "4",
+              "arguments": [
+                "{{widgets.m25017.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "next": "m25016",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "5",
+              "arguments": [
+                "{{widgets.m25017.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "next": "set_variables_15",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "6",
+              "arguments": [
+                "{{widgets.m25017.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "6"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25017.Digits}}",
+        "offset": {
+          "x": -900,
+          "y": 1180
+        }
+      }
+    },
+    {
+      "name": "m25018",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25018",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25018-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -300,
+          "y": 910
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25018",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_4",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25018.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "isHoliday",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25018.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "next": "m25019",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "3",
+              "arguments": [
+                "{{widgets.m25018.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "next": "m25015",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "4",
+              "arguments": [
+                "{{widgets.m25018.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "next": "m25016",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "5",
+              "arguments": [
+                "{{widgets.m25018.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "next": "set_variables_15",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "6",
+              "arguments": [
+                "{{widgets.m25018.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "6"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25018.Digits}}",
+        "offset": {
+          "x": -330,
+          "y": 1190
+        }
+      }
+    },
+    {
+      "name": "set_variables_4",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "connect_call_1",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "TRAVEL",
+            "key": "ct3"
+          },
+          {
+            "value": "ALPHA",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -3910,
+          "y": 1610
+        }
+      }
+    },
+    {
+      "name": "connect_call_1",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -3910,
+          "y": 1810
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "isHoliday",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_5",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "isOpen",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isHoliday}}",
+        "offset": {
+          "x": -3580,
+          "y": 1610
+        }
+      }
+    },
+    {
+      "name": "isOpen",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_7",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "set_variables_6",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isOpen}}",
+        "offset": {
+          "x": -3240,
+          "y": 1600
+        }
+      }
+    },
+    {
+      "name": "set_variables_5",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "pHoliday_E",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": -3580,
+          "y": 1810
+        }
+      }
+    },
+    {
+      "name": "set_variables_6",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25006",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": -3240,
+          "y": 1810
+        }
+      }
+    },
+    {
+      "name": "pHoliday_E",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25118-alpha.wav",
+        "offset": {
+          "x": -3580,
+          "y": 2060
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "m25006",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25006",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25006-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -3240,
+          "y": 2030
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "s25006",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_8",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25006.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25006.Digits}}",
+        "offset": {
+          "x": -3240,
+          "y": 2240
+        }
+      }
+    },
+    {
+      "name": "set_variables_8",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -3240,
+          "y": 2500
+        }
+      }
+    },
+    {
+      "name": "p25103",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "connect_call_2",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25103-alpha.wav",
+        "offset": {
+          "x": -3580,
+          "y": 2500
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "connect_call_2",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -3580,
+          "y": 2720
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "set_variables_9",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "connect_call_3",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "PwP",
+            "key": "ct3"
+          },
+          {
+            "value": "REDEMPTION",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -2910,
+          "y": 2030
+        }
+      }
+    },
+    {
+      "name": "connect_call_3",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -2910,
+          "y": 2240
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "set_variables_10",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "connect_call_4",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "PwP",
+            "key": "ct3"
+          },
+          {
+            "value": "REWARDS",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -2580,
+          "y": 2030
+        }
+      }
+    },
+    {
+      "name": "connect_call_4",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -2580,
+          "y": 2240
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "m25019",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25019",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25019-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -2770,
+          "y": 1600
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25019",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "set_variables_9",
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_9",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25019.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "set_variables_10",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25019.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25019.Digits}}",
+        "offset": {
+          "x": -2770,
+          "y": 1800
+        }
+      }
+    },
+    {
+      "name": "m25015",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25015",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25015-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -2150,
+          "y": 1590
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25015",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "set_variables_11",
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_11",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25015.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "isHoliday_1",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25015.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25015.Digits}}",
+        "offset": {
+          "x": -2150,
+          "y": 1800
+        }
+      }
+    },
+    {
+      "name": "set_variables_11",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "connect_call_5",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "REG",
+            "key": "ct3"
+          },
+          {
+            "value": "WEB",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -2250,
+          "y": 2030
+        }
+      }
+    },
+    {
+      "name": "set_variables_12",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_2_of_p25103",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "REG",
+            "key": "ct3"
+          },
+          {
+            "value": "RESET",
+            "key": "ct4"
+          },
+          {
+            "value": "Q",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -1920,
+          "y": 3220
+        }
+      }
+    },
+    {
+      "name": "connect_call_5",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -2250,
+          "y": 2240
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "m25016",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25016",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25016-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -1440,
+          "y": 1580
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25016",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "set_variables_13",
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_13",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25016.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "isHoliday_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25016.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25016.Digits}}",
+        "offset": {
+          "x": -1440,
+          "y": 1800
+        }
+      }
+    },
+    {
+      "name": "set_variables_13",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "connect_call_6",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "TS",
+            "key": "ct3"
+          },
+          {
+            "value": "TRAVEL",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -1590,
+          "y": 2030
+        }
+      }
+    },
+    {
+      "name": "set_variables_14",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_Copy_2_of_p25103",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "TS",
+            "key": "ct3"
+          },
+          {
+            "value": "MERC",
+            "key": "ct4"
+          },
+          {
+            "value": "Q",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -1230,
+          "y": 3230
+        }
+      }
+    },
+    {
+      "name": "connect_call_6",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -1590,
+          "y": 2240
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "set_variables_15",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "connect_call_7",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CIBC",
+            "key": "ct3"
+          },
+          {
+            "value": "INQUIRY",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -840,
+          "y": 1570
+        }
+      }
+    },
+    {
+      "name": "connect_call_7",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -840,
+          "y": 1790
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "set_variables_7",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "p25103",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "MERC",
+            "key": "ct3"
+          },
+          {
+            "index": "1",
+            "value": "MAIN",
+            "key": "ct4"
+          },
+          {
+            "value": "Q",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": -3580,
+          "y": 2280
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_2",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017_F",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "index": "0",
+            "value": "French",
+            "key": "LangType"
+          },
+          {
+            "index": "1",
+            "value": "F",
+            "key": "ct6"
+          }
+        ],
+        "offset": {
+          "x": 3610,
+          "y": 770
+        }
+      }
+    },
+    {
+      "name": "m25018_F",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25018_F",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25018-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 4180,
+          "y": 1040
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "m25017_F",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25017_F",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "next": "m25018_F",
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25017-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 3610,
+          "y": 1040
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25018_F",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_4",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25018_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isHoliday",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25018_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "next": "m25019_F",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "3",
+              "arguments": [
+                "{{widgets.m25018_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "next": "m25015_F",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "4",
+              "arguments": [
+                "{{widgets.m25018_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "next": "m25016_F",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "5",
+              "arguments": [
+                "{{widgets.m25018_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_set_variables_15",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "6",
+              "arguments": [
+                "{{widgets.m25018_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "6"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25018_F.Digits}}",
+        "offset": {
+          "x": 4150,
+          "y": 1320
+        }
+      }
+    },
+    {
+      "name": "s25017_F",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "m25018_F",
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_4",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25017_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isHoliday",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25017_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "next": "m25019_F",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "3",
+              "arguments": [
+                "{{widgets.m25017_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "next": "m25015_F",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "4",
+              "arguments": [
+                "{{widgets.m25017_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "next": "m25016_F",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "5",
+              "arguments": [
+                "{{widgets.m25017_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_set_variables_15",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "6",
+              "arguments": [
+                "{{widgets.m25017_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "6"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25017_F.Digits}}",
+        "offset": {
+          "x": 3580,
+          "y": 1310
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_15",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_7",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CIBC",
+            "key": "ct3"
+          },
+          {
+            "value": "INQUIRY",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 3640,
+          "y": 1700
+        }
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_7",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 3640,
+          "y": 1920
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_13",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_6",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "TS",
+            "key": "ct3"
+          },
+          {
+            "value": "TRAVEL",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 2890,
+          "y": 2160
+        }
+      }
+    },
+    {
+      "name": "s25016_F",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "Copy_of_set_variables_13",
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_13",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25016_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isHoliday_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25016_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25016_F.Digits}}",
+        "offset": {
+          "x": 3040,
+          "y": 1930
+        }
+      }
+    },
+    {
+      "name": "m25016_F",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25016_F",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25016-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 3040,
+          "y": 1710
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "m25015_F",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25015_F",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25015-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 2330,
+          "y": 1720
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "s25015_F",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "Copy_of_set_variables_11",
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_11",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25015_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isHoliday_1",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25015_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25015_F.Digits}}",
+        "offset": {
+          "x": 2330,
+          "y": 1930
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_11",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_5",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "REG",
+            "key": "ct3"
+          },
+          {
+            "value": "WEB",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 2230,
+          "y": 2160
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_10",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_4",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "PwP",
+            "key": "ct3"
+          },
+          {
+            "value": "REWARDS",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 1900,
+          "y": 2160
+        }
+      }
+    },
+    {
+      "name": "s25019_F",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "Copy_of_set_variables_9",
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_9",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25019_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_set_variables_10",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "2",
+              "arguments": [
+                "{{widgets.m25019_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25019_F.Digits}}",
+        "offset": {
+          "x": 1710,
+          "y": 1930
+        }
+      }
+    },
+    {
+      "name": "m25019_F",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25019_F",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25019-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 1710,
+          "y": 1730
+        },
+        "loop": 2,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_9",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_3",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "PwP",
+            "key": "ct3"
+          },
+          {
+            "value": "REDEMPTION",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 1570,
+          "y": 2160
+        }
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_6",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 2890,
+          "y": 2370
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_5",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 2230,
+          "y": 2370
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_4",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1900,
+          "y": 2370
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_3",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1570,
+          "y": 2370
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_8",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017_F",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1240,
+          "y": 2630
+        }
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_2",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 900,
+          "y": 2850
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_p25103",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_2",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25103-alphaFR.wav",
+        "offset": {
+          "x": 900,
+          "y": 2630
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_7",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_p25103",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "MERC",
+            "key": "ct3"
+          },
+          {
+            "index": "1",
+            "value": "MAIN",
+            "key": "ct4"
+          },
+          {
+            "value": "Q",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 900,
+          "y": 2400
+        }
+      }
+    },
+    {
+      "name": "s25006_F",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_8",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25006_F.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25006_F.Digits}}",
+        "offset": {
+          "x": 1240,
+          "y": 2370
+        }
+      }
+    },
+    {
+      "name": "m25006_F",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25006_F",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25006-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 1240,
+          "y": 2160
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "Copy_of_pHoliday_E",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25118-alphaFR.wav",
+        "offset": {
+          "x": 900,
+          "y": 2160
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_6",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25006_F",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": 1240,
+          "y": 1940
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_5",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_pHoliday_E",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": 900,
+          "y": 1940
+        }
+      }
+    },
+    {
+      "name": "Copy_of_isOpen",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_7",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_set_variables_6",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isOpen}}",
+        "offset": {
+          "x": 1240,
+          "y": 1730
+        }
+      }
+    },
+    {
+      "name": "Copy_of_isHoliday",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_5",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isOpen",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isHoliday}}",
+        "offset": {
+          "x": 900,
+          "y": 1740
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_4",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_connect_call_1",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "TRAVEL",
+            "key": "ct3"
+          },
+          {
+            "value": "ALPHA",
+            "key": "ct4"
+          },
+          {
+            "value": "T",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 570,
+          "y": 1740
+        }
+      }
+    },
+    {
+      "name": "Copy_of_connect_call_1",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 570,
+          "y": 1940
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_2_of_set_variables_5",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_2_of_pHoliday_E",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": -1930,
+          "y": 2790
+        }
+      }
+    },
+    {
+      "name": "isHoliday_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_2_of_set_variables_5",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "isOpen_1",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isHoliday}}",
+        "offset": {
+          "x": -1930,
+          "y": 2590
+        }
+      }
+    },
+    {
+      "name": "isOpen_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_12",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_2_of_set_variables_6",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isOpen}}",
+        "offset": {
+          "x": -1590,
+          "y": 2580
+        }
+      }
+    },
+    {
+      "name": "Copy_2_of_set_variables_6",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25006_1",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": -1590,
+          "y": 2790
+        }
+      }
+    },
+    {
+      "name": "m25006_1",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25006_1",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25006-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -1590,
+          "y": 3010
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "Copy_2_of_pHoliday_E",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25118-alpha.wav",
+        "offset": {
+          "x": -1930,
+          "y": 3010
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "s25006_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_2_of_set_variables_8",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25006_1.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25006_1.Digits}}",
+        "offset": {
+          "x": -1590,
+          "y": 3220
+        }
+      }
+    },
+    {
+      "name": "Copy_2_of_set_variables_8",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -1590,
+          "y": 3480
+        }
+      }
+    },
+    {
+      "name": "Copy_3_of_set_variables_5",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_3_of_pHoliday_E",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": -1240,
+          "y": 2780
+        }
+      }
+    },
+    {
+      "name": "isHoliday_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_3_of_set_variables_5",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "isOpen_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isHoliday}}",
+        "offset": {
+          "x": -1240,
+          "y": 2580
+        }
+      }
+    },
+    {
+      "name": "isOpen_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "set_variables_14",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_3_of_set_variables_6",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isOpen}}",
+        "offset": {
+          "x": -900,
+          "y": 2570
+        }
+      }
+    },
+    {
+      "name": "Copy_3_of_set_variables_6",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25006_2",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": -900,
+          "y": 2780
+        }
+      }
+    },
+    {
+      "name": "m25006_2",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25006_2",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25006-alpha.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": -900,
+          "y": 3000
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "Copy_3_of_pHoliday_E",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25118-alpha.wav",
+        "offset": {
+          "x": -1240,
+          "y": 3010
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "s25006_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_3_of_set_variables_8",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25006_2.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25006_2.Digits}}",
+        "offset": {
+          "x": -900,
+          "y": 3230
+        }
+      }
+    },
+    {
+      "name": "Copy_3_of_set_variables_8",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -900,
+          "y": 3470
+        }
+      }
+    },
+    {
+      "name": "Copy_2_of_p25103",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "Copy_2_of_connect_call_2",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25103-alpha.wav",
+        "offset": {
+          "x": -1920,
+          "y": 3480
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_2_of_connect_call_2",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -1920,
+          "y": 3700
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_Copy_2_of_p25103",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "Copy_of_Copy_2_of_connect_call_2",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25103-alpha.wav",
+        "offset": {
+          "x": -1230,
+          "y": 3470
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_of_Copy_2_of_connect_call_2",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -1230,
+          "y": 3690
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_isHoliday_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_Copy_2_of_set_variables_5",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isOpen_1",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isHoliday}}",
+        "offset": {
+          "x": 2500,
+          "y": 2920
+        }
+      }
+    },
+    {
+      "name": "Copy_of_Copy_2_of_set_variables_5",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_Copy_2_of_pHoliday_E",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": 2500,
+          "y": 3120
+        }
+      }
+    },
+    {
+      "name": "Copy_of_Copy_2_of_pHoliday_E",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25118-alphaFR.wav",
+        "offset": {
+          "x": 2510,
+          "y": 3340
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_12",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_2_of_Copy_2_of_p25103",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "REG",
+            "key": "ct3"
+          },
+          {
+            "value": "RESET",
+            "key": "ct4"
+          },
+          {
+            "value": "Q",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 2510,
+          "y": 3550
+        }
+      }
+    },
+    {
+      "name": "Copy_2_of_Copy_2_of_p25103",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "Copy_2_of_Copy_2_of_connect_call_2",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25103-alphaFR.wav",
+        "offset": {
+          "x": 2510,
+          "y": 3810
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_2_of_Copy_2_of_connect_call_2",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 2510,
+          "y": 4030
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_Copy_of_Copy_2_of_connect_call_2",
+      "type": "connect-call-to",
+      "transitions": [
+        {
+          "event": "callCompleted"
+        },
+        {
+          "event": "hangup"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 3200,
+          "y": 4020
+        },
+        "caller_id": "{{contact.channel.address}}",
+        "noun": "number",
+        "to": "+15063337850",
+        "timeout": 30
+      }
+    },
+    {
+      "name": "Copy_of_Copy_2_of_set_variables_8",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017_F",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 2840,
+          "y": 3810
+        }
+      }
+    },
+    {
+      "name": "Copy_of_Copy_of_Copy_2_of_p25103",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "Copy_of_Copy_of_Copy_2_of_connect_call_2",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25103-alphaFR.wav",
+        "offset": {
+          "x": 3200,
+          "y": 3800
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "Copy_of_Copy_3_of_set_variables_8",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25017_F",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 3530,
+          "y": 3800
+        }
+      }
+    },
+    {
+      "name": "s25006_4",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_Copy_3_of_set_variables_8",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25006_4.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25006_4.Digits}}",
+        "offset": {
+          "x": 3530,
+          "y": 3560
+        }
+      }
+    },
+    {
+      "name": "Copy_of_set_variables_14",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_Copy_of_Copy_2_of_p25103",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "TS",
+            "key": "ct3"
+          },
+          {
+            "value": "MERC",
+            "key": "ct4"
+          },
+          {
+            "value": "Q",
+            "key": "ct5"
+          }
+        ],
+        "offset": {
+          "x": 3200,
+          "y": 3560
+        }
+      }
+    },
+    {
+      "name": "s25006_3",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_Copy_2_of_set_variables_8",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "1",
+              "arguments": [
+                "{{widgets.m25006_3.Digits}}"
+              ],
+              "type": "equal_to",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.m25006_3.Digits}}",
+        "offset": {
+          "x": 2840,
+          "y": 3550
+        }
+      }
+    },
+    {
+      "name": "m25006_3",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25006_3",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25006-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 2850,
+          "y": 3340
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "Copy_of_Copy_3_of_pHoliday_E",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25118-alphaFR.wav",
+        "offset": {
+          "x": 3190,
+          "y": 3340
+        },
+        "loop": 1
+      }
+    },
+    {
+      "name": "m25006_4",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "next": "s25006_4",
+          "event": "keypress"
+        },
+        {
+          "event": "speech"
+        },
+        {
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "play": "https://sunglow-lemming-5152.twil.io/assets/25006-alphaFR.wav",
+        "number_of_digits": 1,
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 3530,
+          "y": 3330
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "Copy_of_Copy_3_of_set_variables_6",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25006_4",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": 3530,
+          "y": 3110
+        }
+      }
+    },
+    {
+      "name": "Copy_of_Copy_3_of_set_variables_5",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "Copy_of_Copy_3_of_pHoliday_E",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": 3190,
+          "y": 3110
+        }
+      }
+    },
+    {
+      "name": "Copy_of_Copy_2_of_set_variables_6",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "m25006_3",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "CLS",
+            "key": "ct3"
+          }
+        ],
+        "offset": {
+          "x": 2840,
+          "y": 3120
+        }
+      }
+    },
+    {
+      "name": "Copy_of_isOpen_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_12",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_Copy_2_of_set_variables_6",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isOpen}}",
+        "offset": {
+          "x": 2840,
+          "y": 2920
+        }
+      }
+    },
+    {
+      "name": "Copy_of_isHoliday_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_Copy_3_of_set_variables_5",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_isOpen_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isHoliday}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isHoliday}}",
+        "offset": {
+          "x": 3190,
+          "y": 2910
+        }
+      }
+    },
+    {
+      "name": "Copy_of_isOpen_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_set_variables_14",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "true",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "next": "Copy_of_Copy_3_of_set_variables_6",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "false",
+              "arguments": [
+                "{{flow.variables.isOpen}}"
+              ],
+              "type": "equal_to",
+              "value": "false"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.isOpen}}",
+        "offset": {
+          "x": 3530,
+          "y": 2900
+        }
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}

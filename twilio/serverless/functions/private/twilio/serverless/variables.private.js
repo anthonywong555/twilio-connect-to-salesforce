@@ -1,16 +1,31 @@
-const getVariable = async (context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key}) => {
+const fetch = async (twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key}) => {
   try {
-    return await twilioClient.serverless
-      .services(SERVERLESS_SID)
-      .environments(ENVIRONMENT_SID)
-      .variables(key)
-      .fetch();
+    const variables = await twilioClient.serverless
+    .services(SERVERLESS_SID)
+    .environments(ENVIRONMENT_SID)
+    .variables
+    .list();
+    
+    let result = null;
+
+    for(const aVariable of variables) {
+      if(aVariable.key === key) {
+        result = aVariable;
+        break;
+      }
+    }
+
+    if(result) {
+      return result;
+    } else {
+      throw `The requested resource /Services/${SERVERLESS_SID}/Environments/${ENVIRONMENT_SID}/Variables/${key} was not found`
+    }
   } catch(e) {
     throw e;
   }
 }
 
-const insertVariable = async (context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) => {
+const create = async (twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) => {
   try {
     return await twilioClient.serverless
       .services(SERVERLESS_SID)
@@ -22,31 +37,35 @@ const insertVariable = async (context, twilioClient, {SERVERLESS_SID, ENVIRONMEN
   }
 }
 
-const updateVariable = async (context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) => {
+const update = async (twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) => {
   try {
+    const aVariable = await fetch(twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key});
+
     return await twilioClient.serverless
       .services(SERVERLESS_SID)
       .environments(ENVIRONMENT_SID)
-      .variables
-      .create({key, value});
+      .variables(aVariable.sid)
+      .update({key, value});
   } catch (e) {
     throw e;
   }
 }
 
-const upsertVariable = async (context, twilioClient, data) => {
+const upsert = async (twilioClient, data) => {
   const {SERVERLESS_SID, ENVIRONMENT_SID, key, value} = data;
+
   try {
     try {
       // Check to see if it exist
-      await getVariable(context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key});
+      await fetch(twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key});
 
       // update
-      return await updateVariable(context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value});
+      return await update(twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value});
     } catch (e) {
-      if(e.message === `The requested resource /Services/${SERVERLESS_SID}/Environments/${ENVIRONMENT_SID}/Variables/${key} was not found`) {
+      console.log(e);
+      if(e === `The requested resource /Services/${SERVERLESS_SID}/Environments/${ENVIRONMENT_SID}/Variables/${key} was not found`) {
         // insert
-        return await insertVariable(context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) 
+        return await create(twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) 
       } else {
         throw e;
       }
@@ -57,4 +76,4 @@ const upsertVariable = async (context, twilioClient, data) => {
 }
 
 
-export {insertVariable, updateVariable, upsertVariable};
+module.exports = {fetch, create, update, upsert};

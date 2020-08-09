@@ -1,7 +1,16 @@
+// Load Modules
 const jsforce = require('jsforce');
 const moment = require('moment');
 
 let serverlessHelper = null;
+let twilioHelper = null;
+
+// Global Variables
+SF_ACCESS_TOKEN = 'SF_ACCESS_TOKEN';
+SF_INSTANCE_URL = 'SF_INSTANCE_URL';
+SF_SYNC_KEY = 'SF_SYNC_KEY';
+SF_SYNC_KEY_DATE_CREATED = 'SF_SYNC_KEY_DATE_CREATED';
+SF_SYNC_KEY_DATE_EXPIRES = 'SF_SYNC_KEY_DATE_EXPIRES';
 
 /**
  * Get Salesforce Access Token
@@ -11,22 +20,29 @@ exports.handler = async (context, event, callback) => {
   try {
     // Twilio Serverless Boilerplate
     const twilioClient = require('twilio')(context.ACCOUNT_SID, context.AUTH_TOKEN);
-    const functions = Runtime.getFunctions();
+    await loadModules(context);
 
-    if(!serverlessHelper) {
-      const errorPath = functions['private/twilio/serverless/variables'].path;
-      error = require(errorPath);
-    }
-
-    
-    callback(null, error.formatErrorMsg(context, 'exports.handler', 'hit'));
     // Main Code
     const result = await getSFDCAccessToken(context, twilioClient);
-    callback(null, result);
+    return callback(null, {});
   } catch(e) {
     callback(e);
   }
 };
+
+const loadModules = async (context) => {
+  try {
+    const functions = Runtime.getFunctions();
+
+    const serverlessHelperPath = functions['private/boilerplate/helper'].path;
+    serverlessHelper = require(serverlessHelperPath);
+
+    const twilioHelperPath = functions['private/twilio/index'].path;
+    twilioHelper = require(twilioHelperPath);
+  } catch (e) {
+    throw serverlessHelper.formatErrorMsg(context, 'getSFDCAccessToken', e);
+  }
+}
 
 /**
  * 
@@ -34,12 +50,17 @@ exports.handler = async (context, event, callback) => {
  */
 const getSFDCAccessToken = async (context, twilioClient) => {
   try {
-    //const sfdc = await generateSFDCAccessToken(context);
-    const sfdc = {};
-    const result = await upsertSFDCAccessTokenEnv(context, twilioClient, sfdc);
+    const sfdcAuth = await generateSFDCAuth(context);
+    await upsertSFDCAuthTwilio(context, twilioClient, sfdcAuth);
+    const {accessToken, instanceUrl} = sfdcAuth;
+    const result = {
+      accessToken,
+      instanceUrl
+    }
     return result;
+    //await upsertSFDCAccessTokenSync(context, twilioClient, sfdc);
   } catch (e) {
-    throw formatErrorMsg(context, 'getSFDCAccessToken', e);
+    throw serverlessHelper.formatErrorMsg(context, 'getSFDCAccessToken', e);
   }
 }
 
@@ -68,7 +89,16 @@ const getSFDCAccessTokenFromEnv = async (context, twilioClient) => {
 
     return {instanceUrl, accessToken}; 
   } catch(e) {
-    throw formatErrorMsg(context, 'getSFDCAccessTokenFromEnv', e);
+    throw serverlessHelper.formatErrorMsg(context, 'getSFDCAccessTokenFromEnv', e);
+  }
+}
+
+const upsertSFDCAuthTwilio = async(context, twilioClient, sfdcAuth) => {
+  try {
+    await upsertSFDCAuthEnv(context, twilioClient, sfdcAuth);
+    await upsertSFDCAuthSync(context, twilioClient, sfdcAuth);
+  } catch (e) {
+    throw serverlessHelper.formatErrorMsg(context, 'upsertSFDCAuthTwilio', e);
   }
 }
 
@@ -76,104 +106,84 @@ const getSFDCAccessTokenFromEnv = async (context, twilioClient) => {
  * 
  * @param {*} context 
  */
-const upsertSFDCAccessTokenEnv = async (context, twilioClient, {instanceUrl, accessToken}) => {
+const upsertSFDCAuthEnv = async (context, twilioClient, sfdcAuth) => {
   try {
-    try {
-      // Check to see if env is there
-      const test = await twilioClient.serverless
-        .services(context.MOD_SERVERLESS_SID)
-        .environments(context.MOD_ENVIRONMENT_SID)
-        .variables(context.SF_ACCESS_TOKEN)
-        .fetch();
-    } catch(e) {
-      if(e.message === `The requested resource /Services/${context.MOD_SERVERLESS_SID}/Environments/${context.MOD_ENVIRONMENT_SID}/Variables/${context.SF_ACCESS_TOKEN} was not found`) {
-        await insertServerlessEnvVariables(context, twilioClient);
-        //await insertTwilioSyncVariables();
-      }
-    } finally {
-      // Update the
+    const {accessToken, instanceUrl} = sfdcAuth;
+    const SERVERLESS_SID = context.MOD_SERVERLESS_SID;
+    const ENVIRONMENT_SID = context.MOD_ENVIRONMENT_SID;
+
+    const dateCreated = moment().format();
+    const dateExpires = moment().add(context.SF_TTL, 'seconds').format();
+
+    // Build Modals
+
+    const sfdcAccessTokenEnv = {
+      SERVERLESS_SID,
+      ENVIRONMENT_SID,
+      key: SF_ACCESS_TOKEN,
+      value: accessToken
+    };
+
+    const sfdcInstanceURLEnv = {
+      SERVERLESS_SID,
+      ENVIRONMENT_SID,
+      key: SF_INSTANCE_URL,
+      value: instanceUrl
     }
+
+    const dateCreatedEnv = {
+      SERVERLESS_SID,
+      ENVIRONMENT_SID,
+      key: SF_SYNC_KEY_DATE_CREATED,
+      value: dateCreated
+    };
+
+    const dateExpiresEnv = {
+      SERVERLESS_SID,
+      ENVIRONMENT_SID,
+      key: SF_SYNC_KEY_DATE_EXPIRES,
+      value: dateExpires
+    };
+
+    // Upsert Modals
+    await twilioHelper.serverlessVariables.upsert(twilioClient, sfdcAccessTokenEnv);
+    await twilioHelper.serverlessVariables.upsert(twilioClient, sfdcInstanceURLEnv);
+    await twilioHelper.serverlessVariables.upsert(twilioClient, dateCreatedEnv);
+    await twilioHelper.serverlessVariables.upsert(twilioClient, dateExpiresEnv);
+
+    return;
   } catch (e) {
-    throw formatErrorMsg(context, 'upsertSFDCAccessTokenEnv', e);
+    throw serverlessHelper.formatErrorMsg(context, 'upsertSFDCAccessTokenEnv', e);
   }
 }
 
-const insertServerlessEnvVariables = async (context, twilioClient) => {
+const upsertSFDCAuthSync = async (context, twilioClient, sfdcAuth) => {
   try {
-    // Create Variables
-    await twilioClient.serverless
-      .services(context.MOD_SERVERLESS_SID)
-      .environments(context.MOD_ENVIRONMENT_SID)
-      .variables
-      .create({key: context.SF_SYNC_KEY, value: ''});
+    const {accessToken, instanceUrl} = sfdcAuth;
+    const SYNC_SERVICE_SID = context.TWILIO_SYNC_SERVICE_SID;
+    const ttl = context.SF_TTL;
+    const dateCreated = moment().format();
+    const dateExpires = moment().add(ttl, 'seconds').format();
+    const uniqueName = SF_SYNC_KEY;
 
-    await twilioClient.serverless
-      .services(context.MOD_SERVERLESS_SID)
-      .environments(context.MOD_ENVIRONMENT_SID)
-      .variables
-      .create({key: context.SF_SYNC_KEY_DATE_CREATED, value: ''});
+    // Build Modals
+    const data = {
+      SF_ACCESS_TOKEN: accessToken,
+      SF_INSTANCE_URL: instanceUrl,
+      SF_SYNC_KEY_DATE_CREATED: dateCreated,
+      SF_SYNC_KEY_DATE_EXPIRES: dateExpires
+    };
 
-    await twilioClient.serverless
-      .services(context.MOD_SERVERLESS_SID)
-      .environments(context.MOD_ENVIRONMENT_SID)
-      .variables
-      .create({key: context.SF_SYNC_KEY_DATE_EXPIRES, value: ''});
+    // Upsert Modals
+    return await twilioHelper.syncDocument.upsert(twilioClient, {SYNC_SERVICE_SID, uniqueName, data, ttl});
   } catch (e) {
-    throw formatErrorMsg(context, 'insertServerlessEnvVariables', e);
+    throw serverlessHelper.formatErrorMsg(context, 'upsertSFDCAuthSync', e);
   }
 }
 
-const insertServerlessEnvVariable = async (context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) => {
-  try {
-    return await twilioClient.serverless
-      .services(SERVERLESS_SID)
-      .environments(ENVIRONMENT_SID)
-      .variables
-      .create({key, value});
-  } catch (e) {
-    throw formatErrorMsg(context, 'insertServerlessEnvVariable', e);
-  }
-}
 
-const updateServerlessEnvVariable = async (context, twilioClient, {SERVERLESS_SID, ENVIRONMENT_SID, key, value}) => {
-  try {
-    return await twilioClient.serverless
-      .services(SERVERLESS_SID)
-      .environments(ENVIRONMENT_SID)
-      .variables
-      .create({key, value});
-  } catch (e) {
-    throw formatErrorMsg(context, 'insertServerlessEnvVariable', e);
-  }
-}
 
-const insertTwilioSyncVariables = async (context, twilioClient, {SYNC_SERVICE_SID, uniqueName, data, ttl}) => {
-  try {
-    return await twilioClient.sync
-      .services(SYNC_SERVICE_SID)
-      .documents
-      .create({
-        uniqueName,
-        data,
-        ttl
-      });
-  } catch(e) {
-    throw formatErrorMsg(context, 'insertTwilioSyncVariables', e);
-  }
-}
-
-const upsertSFDCAccessTokenSync = async (context, twilioClient, {SYNC_SERVICE_SID, DOCUMENT_SID, data}) => {
-  try {
-    return await twilioClient.sync
-      .services(SYNC_SERVICE_SID)
-      .documents(DOCUMENT_SID)
-      .update(data);
-  } catch (e) {
-    throw formatErrorMsg(context, 'upsertSFDCAccessTokenSync', e);
-  }
-}
-
-const authSFDCEnv = async (context, {instanceUrl, accessToken}) => {
+const testSFDCAuth = async (context, {instanceUrl, accessToken}) => {
   try {
     const conn = new jsforce.Connection({
       instanceUrl,
@@ -185,7 +195,7 @@ const authSFDCEnv = async (context, {instanceUrl, accessToken}) => {
 
     return true;
   } catch (e) {
-    throw formatErrorMsg(context, 'authSFDCEnv', e);
+    throw serverlessHelper.formatErrorMsg(context, 'authSFDCEnv', e);
   }
 }
 
@@ -193,7 +203,7 @@ const authSFDCEnv = async (context, {instanceUrl, accessToken}) => {
  * Authenticate to Salesforce
  * @param {*} context export.handler context
  */
-const generateSFDCAccessToken = async (context) => {
+const generateSFDCAuth = async (context) => {
   try {
     const conn = new jsforce.Connection({
       oauth2 : {
@@ -206,14 +216,6 @@ const generateSFDCAccessToken = async (context) => {
     const userInfo = await conn.login(context.SF_USERNAME, context.SF_PASSWORD + context.SF_TOKEN);
     return ({...conn, ...userInfo});
   } catch (e) {
-    throw formatErrorMsg(context, 'generateSFDCAccessToken', e);
+    throw serverlessHelper.formatErrorMsg(context, 'generateSFDCAuth', e);
   }
-}
-
-const formatErrorMsg = (context, functionName, errorMsg) => {
-  return `
-    Twilio Function Path: ${context.PATH} \n 
-    Function Name: ${functionName} \n 
-    Error Message: ${errorMsg}
-  `;
 }
